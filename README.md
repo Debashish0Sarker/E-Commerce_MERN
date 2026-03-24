@@ -24,12 +24,15 @@ Before you begin, ensure you have the following installed:
 ```bash
 git clone https://github.com/yourusername/ecommerce-backend.git
 cd ecommerce-backend
+```
 
 
 ### 2. Install Depedencies
-
+```
 npm install
+```
 
 ### 3. Run Developer server
-
+```
 npm run dev
+```
