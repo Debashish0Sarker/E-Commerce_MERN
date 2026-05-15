@@ -1,27 +1,21 @@
 import express from 'express';
 import testroutes from './routes/test.js';
+import authRoutes from './routes/authRoutes.js';
 import { connectDB } from './config/db.js';
 import dotenv from "dotenv";
 
 dotenv.config();
+console.log("JWT_SECRET loaded:", process.env.JWT_SECRET ? "YES ✅" : "NO ❌");
+console.log("ADMIN_SECRET_CODE loaded:", process.env.ADMIN_SECRET_CODE ? "YES ✅" : "NO ❌");
 
-
-// const express = require('express');
+connectDB();
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
+app.use("/api/test", testroutes);
+app.use("/api/auth", authRoutes);
 
-
-// app.use((req, res, next) => {
-//     console.log("we just logged in the middleware. Method is", req.method, "and url is", req.url);
-//     next();
-// });
-app.use("/", testroutes);
-connectDB().then(() => {
 app.listen(PORT, () => {
-    console.log('Server is running on port',PORT);
-})
+    console.log(`Server is running on port ${PORT}`);
 });
-
-
-//
