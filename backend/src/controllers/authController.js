@@ -85,7 +85,7 @@ export const register = async (req, res) => {
 export const registerAdmin = async (req, res) => {
     try {
         const { 
-            name, username, age, email, password, adminCode 
+            name, username, age, email, password, adminCode,phoneNumber
         } = req.body;
 
         // Verify admin code
@@ -110,6 +110,7 @@ export const registerAdmin = async (req, res) => {
             name,
             username: username.toLowerCase(),
             email: email.toLowerCase(),
+            phoneNumber,
             age,
             password: hashedPassword,
             identificationNumber: `ADMIN-${Date.now()}`, // Auto-generate for admin
