@@ -1,8 +1,9 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ShoppingBag, User, Mail, Phone, Hash, CreditCard, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import axiosInstance from "../lib/axios";
+import { useAuth } from "../context/AuthContext";
 
 const ROLES = [
   { value: "customer", label: "Customer" },
@@ -11,6 +12,7 @@ const ROLES = [
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -54,8 +56,7 @@ const RegisterPage = () => {
       });
       const { token, user } = res.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      login(user, token);
 
       toast.success("Account created successfully!");
       navigate("/");
