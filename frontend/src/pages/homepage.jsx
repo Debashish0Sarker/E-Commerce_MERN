@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Search, 
@@ -213,9 +213,10 @@ const Homepage = () => {
         ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <div
+              <Link
                 key={product._id}
-                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-content/5 hover:-translate-y-1 flex flex-col justify-between"
+                to={`/product/${product._id}`}
+                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-content/5 hover:-translate-y-1 flex flex-col justify-between cursor-pointer"
               >
                 <div className="card-body p-5 space-y-3">
                   {/* Top Badges */}
@@ -263,7 +264,7 @@ const Homepage = () => {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

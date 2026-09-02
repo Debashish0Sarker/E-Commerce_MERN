@@ -45,3 +45,25 @@ export const getAllProducts = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch products" });
     }
 };
+
+// Get a single product by ID (with full seller info)
+export const getProductById = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id).populate(
+            'seller',
+            'name email phoneNumber username'
+        );
+
+        if (!product) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        res.status(200).json(product);
+    } catch (error) {
+        // Handle invalid ObjectId format
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({ error: "Product not found" });
+        }
+        res.status(500).json({ error: "Failed to fetch product" });
+    }
+};

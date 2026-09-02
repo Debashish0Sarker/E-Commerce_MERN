@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import CreateProductPage from "./pages/CreateProductPage";
+import SeeProduct from "./pages/SeeProduct";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import "./App.css";
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/create" element={<CreateProductPage />} />
+          <Route path="/product/:id" element={<SeeProduct />} />
         </Routes>
       </AuthProvider>
     </ThemeProvider>
