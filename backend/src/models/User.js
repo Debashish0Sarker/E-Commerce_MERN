@@ -66,6 +66,22 @@ const userSchema = new mongoose.Schema({
         default: true
     },
     
+    // Cart Management
+    cart: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            quantity: {
+                type: Number,
+                default: 1,
+                min: 1
+            }
+        }
+    ],
+
     // Timestamps
     lastLogin: {
         type: Date

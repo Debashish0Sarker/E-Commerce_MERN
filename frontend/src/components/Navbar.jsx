@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   ShoppingBag, 
   PlusCircle, 
@@ -7,14 +7,17 @@ import {
   LogIn, 
   LogOut, 
   User as UserIcon,
-  RefreshCw
+  RefreshCw,
+  ShoppingCart
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useCart } from "../context/CartContext";
 
 const Navbar = () => {
   const { user, isAuthenticated, isSeller, switchMode, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { cartCount } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -60,6 +63,21 @@ const Navbar = () => {
                 <Moon className="w-5 h-5 text-primary transition-transform hover:-rotate-12" />
               )}
             </button>
+
+            {/* Cart Button */}
+            <Link
+              to="/cart"
+              className="btn btn-ghost btn-circle btn-sm sm:btn-md relative"
+              title="View Shopping Cart"
+              aria-label="View Shopping Cart"
+            >
+              <ShoppingCart className="w-5 h-5 text-base-content" />
+              {cartCount > 0 && (
+                <span className="badge badge-primary badge-xs sm:badge-sm absolute -top-1 -right-1 font-extrabold shadow-sm">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             {/* Authenticated Controls */}
             {isAuthenticated ? (

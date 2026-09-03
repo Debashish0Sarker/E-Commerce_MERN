@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js';
 import testroutes from './routes/test.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
 
 dotenv.config();
 console.log("JWT_SECRET loaded:", process.env.JWT_SECRET ? "YES ✅" : "NO ❌");
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use("/api/test", testroutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

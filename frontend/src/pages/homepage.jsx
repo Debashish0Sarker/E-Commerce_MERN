@@ -243,9 +243,20 @@ const Homepage = () => {
                     <h2 className="card-title text-base sm:text-lg font-bold text-base-content line-clamp-1">
                       {product.name}
                     </h2>
-                    <p className="text-2xl font-black text-primary mt-1">
-                      ${Number(product.price).toFixed(2)}
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-2xl font-black text-primary">
+                        ${Number(product.price).toFixed(2)}
+                      </p>
+                      <span
+                        className={`badge badge-xs font-semibold ${
+                          (product.stock || 1) <= 1
+                            ? "badge-error text-error-content"
+                            : "badge-ghost text-base-content/70"
+                        }`}
+                      >
+                        {(product.stock || 1) <= 1 ? "1 left" : `${product.stock} in stock`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Description */}

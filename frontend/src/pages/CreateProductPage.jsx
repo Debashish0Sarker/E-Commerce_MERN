@@ -1,6 +1,6 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PlusCircle, ArrowLeft, Package, DollarSign, Tag, FileText, CheckCircle2 } from "lucide-react";
+import { PlusCircle, ArrowLeft, Package, DollarSign, Tag, FileText, CheckCircle2, Layers } from "lucide-react";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import axiosInstance from "../lib/axios";
@@ -29,13 +29,14 @@ const CreateProductPage = () => {
     description: "",
     condition: "New",
     ownerCount: 0,
+    stock: 1,
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "ownerCount" ? Number(value) : value,
+      [name]: name === "ownerCount" || name === "stock" ? Number(value) : value,
     }));
   };
 
@@ -69,6 +70,7 @@ const CreateProductPage = () => {
         ...formData,
         price: Number(formData.price),
         ownerCount: condition === "New" ? 0 : Number(ownerCount),
+        stock: Math.max(1, Number(formData.stock) || 1),
       });
 
       toast.success("Product uploaded successfully!");
@@ -136,8 +138,8 @@ const CreateProductPage = () => {
                 </div>
               </div>
 
-              {/* Price & Category Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Price, Stock & Category Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">Price ($) *</span>
@@ -152,6 +154,26 @@ const CreateProductPage = () => {
                       placeholder="99.99"
                       className="input input-bordered w-full pl-10"
                       value={formData.price}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Quantity / Stock *</span>
+                    <span className="label-text-alt text-base-content/50">e.g. 1, 2, 4</span>
+                  </label>
+                  <div className="relative">
+                    <Layers className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
+                    <input
+                      type="number"
+                      name="stock"
+                      min="1"
+                      placeholder="1"
+                      className="input input-bordered w-full pl-10"
+                      value={formData.stock}
                       onChange={handleChange}
                       required
                     />
