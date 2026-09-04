@@ -30,6 +30,13 @@ const productSchema = new mongoose.Schema({
         default: 0,
         // We will validate this in the controller based on the condition
     },
+    // Available stock quantity
+    stock: {
+        type: Number,
+        required: true,
+        default: 1,
+        min: 0
+    },
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
