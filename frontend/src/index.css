@@ -1,3 +1,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+
+  /* Optical sizing + a slightly narrower cut for headings. */
+  h1, h2, h3, .font-display {
+    font-variation-settings: "SOFT" 0, "WONK" 0, "opsz" 40;
+  }
+
+  /* Prices and quantities line up in columns. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: hsl(var(--p) / 0.18);
+  }
+
+  /* Chrome paints autofilled fields pale blue, which fights both themes.
+     The long transition is the usual trick to keep our own colours. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: hsl(var(--bc));
+    -webkit-box-shadow: 0 0 0 100px hsl(var(--b1)) inset;
+    caret-color: hsl(var(--bc));
+    transition: background-color 100000s ease-in-out 0s;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--p));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Small caps-ish section label used above card groups and form blocks. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45;
+  }
+
+  /* Hairline surface: borders carry the structure, not drop shadows. */
+  .surface {
+    @apply bg-base-100 border border-base-300/70 rounded-box;
+  }
+
+  .field-label {
+    @apply block text-sm font-medium text-base-content/80 mb-1.5;
+  }
+
+  .hint {
+    @apply text-xs text-base-content/50;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Thin, unobtrusive scrollbars inside panels. */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--bc) / 0.18);
+  border-radius: 999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

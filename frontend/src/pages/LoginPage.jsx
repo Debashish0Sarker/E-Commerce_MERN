@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ShoppingBag } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import axiosInstance from "../lib/axios";
 import { useAuth } from "../context/AuthContext";
+import AuthLayout from "../components/AuthLayout";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -45,101 +46,74 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3">
-            <div className="bg-primary/10 p-4 rounded-full">
-              <ShoppingBag className="w-10 h-10 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-base-content">Welcome Back</h1>
-          <p className="text-base-content/60 mt-1">Sign in to your account</p>
+    <AuthLayout
+      title="Sign in"
+      subtitle="Pick up where you left off."
+      footer={
+        <>
+          New here?{" "}
+          <Link to="/register" className="font-medium text-base-content underline underline-offset-4 decoration-base-content/30 hover:decoration-base-content">
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <div>
+          <label htmlFor="identifier" className="field-label">
+            Username or email
+          </label>
+          <input
+            id="identifier"
+            type="text"
+            name="identifier"
+            className="input input-bordered w-full bg-base-100 focus:border-primary"
+            value={formData.identifier}
+            onChange={handleChange}
+            autoComplete="username"
+            autoFocus
+          />
         </div>
 
-        {/* Card */}
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Identifier */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Username or Email</span>
-                </label>
-                <input
-                  type="text"
-                  name="identifier"
-                  placeholder="Enter your username or email"
-                  className="input input-bordered w-full"
-                  value={formData.identifier}
-                  onChange={handleChange}
-                  autoComplete="username"
-                />
-              </div>
-
-              {/* Password */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Password</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Enter your password"
-                    className="input input-bordered w-full pr-12"
-                    value={formData.password}
-                    onChange={handleChange}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-base-content"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {/* Forgot Password */}
-                <label className="label">
-                  <Link
-                    to="/forgot-password"
-                    className="label-text-alt link link-hover text-primary"
-                  >
-                    Forgot password?
-                  </Link>
-                </label>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                className="btn btn-primary w-full mt-2"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="loading loading-spinner loading-sm" />
-                ) : (
-                  "Sign In"
-                )}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="divider text-base-content/40">OR</div>
-
-            {/* Register link */}
-            <p className="text-center text-base-content/70 text-sm">
-              Don&apos;t have an account?{" "}
-              <Link to="/register" className="link link-primary font-medium">
-                Create one
-              </Link>
-            </p>
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <label htmlFor="password" className="field-label mb-0">
+              Password
+            </label>
+            <Link to="/forgot-password" className="text-xs text-base-content/50 hover:text-base-content transition-colors">
+              Forgot it?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              className="input input-bordered w-full pr-11 bg-base-100 focus:border-primary"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+            </button>
           </div>
         </div>
-      </div>
-    </div>
+
+        <button
+          type="submit"
+          className="btn btn-primary w-full normal-case font-medium"
+          disabled={isLoading}
+        >
+          {isLoading ? <span className="loading loading-spinner loading-sm" /> : "Sign in"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

@@ -1,3 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Global styles live in index.css; kept for the import in App.jsx. */

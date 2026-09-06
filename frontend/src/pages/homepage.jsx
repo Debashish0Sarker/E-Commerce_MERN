@@ -1,18 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Search, 
-  X, 
-  SlidersHorizontal, 
-  Package, 
-  Tag, 
-  User, 
-  Sparkles, 
-  PlusCircle, 
-  ArrowUpDown,
-  ShoppingBag,
-  Bot
-} from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 import Navbar from "../components/Navbar";
 import AIChatbot from "../components/AIChatbot";
 import axiosInstance from "../lib/axios";
@@ -146,41 +134,54 @@ const Homepage = () => {
     setMinStock(null);
   };
 
+  const hasActiveFilters =
+    searchQuery ||
+    selectedCategory !== "All" ||
+    selectedCondition !== "All" ||
+    maxPrice !== null ||
+    minPrice !== null ||
+    minStock !== null;
+
+  // Price/stock chips set by the assistant, rendered next to the result count.
+  const activeChips = [
+    maxPrice !== null && { key: "max", label: `Under $${maxPrice}`, clear: () => setMaxPrice(null) },
+    minPrice !== null && { key: "min", label: `Over $${minPrice}`, clear: () => setMinPrice(null) },
+    minStock !== null && { key: "stock", label: `${minStock}+ in stock`, clear: () => setMinStock(null) },
+  ].filter(Boolean);
+
   return (
-    <div className="min-h-screen bg-base-200/50 flex flex-col">
+    <div className="min-h-screen bg-base-100 flex flex-col">
       <Navbar />
 
-      {/* Hero & Search Header Section */}
-      <section className="bg-base-100 border-b border-base-content/10 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Discover & Shop Marketplace</span>
+      {/* Masthead */}
+      <section className="border-b border-base-300">
+        <div className="mx-auto max-w-[84rem] px-5 sm:px-8 pt-10 pb-0">
+          <div className="max-w-2xl">
+            <h1 className="font-display text-[2.1rem] sm:text-[2.6rem] leading-[1.08] font-semibold tracking-tightish text-base-content">
+              Everything, second-hand and new
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-base-content/60">
+              Listings from independent sellers and shops alike. Search by item,
+              category, or the person selling it.
+            </p>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-base-content">
-            Find whatever you are looking for
-          </h1>
-          <p className="text-base-content/70 max-w-2xl mx-auto text-sm sm:text-base">
-            Explore listings from individual and commercial sellers. Search by item name, category, or keywords.
-          </p>
-
-          {/* Search Bar Input */}
-          <div className="pt-2 max-w-3xl mx-auto">
-            <div className="relative flex items-center">
-              <Search className="absolute left-4 w-5 h-5 text-base-content/40 pointer-events-none" />
+          {/* Search */}
+          <div className="mt-6 max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-base-content/35 pointer-events-none" />
               <input
-                type="text"
-                placeholder="Search products by title, category, description, or seller..."
+                type="search"
+                placeholder="Search listings"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="input input-bordered input-lg w-full pl-12 pr-10 rounded-2xl shadow-sm focus:outline-primary bg-base-200/60 focus:bg-base-100 transition-all text-sm sm:text-base"
+                className="w-full h-12 pl-11 pr-10 rounded-box border border-base-300 bg-base-200/60 text-[15px] text-base-content placeholder:text-base-content/35 focus:bg-base-100 focus:border-primary focus:outline-none transition-colors [&::-webkit-search-cancel-button]:hidden"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 p-1 rounded-full text-base-content/40 hover:text-base-content hover:bg-base-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-base-content/40 hover:text-base-content hover:bg-base-300 transition-colors"
                   aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
@@ -189,18 +190,19 @@ const Homepage = () => {
             </div>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar justify-start sm:justify-center">
+          {/* Category tabs */}
+          <div className="mt-7 -mb-px flex items-center gap-6 overflow-x-auto no-scrollbar">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`btn btn-sm rounded-full capitalize whitespace-nowrap transition-all ${
-                  selectedCategory === cat
-                    ? "btn-primary shadow-sm"
-                    : "btn-ghost bg-base-200/70 hover:bg-base-200"
-                }`}
+                className={
+                  "shrink-0 pb-3 text-sm whitespace-nowrap border-b-2 transition-colors " +
+                  (selectedCategory === cat
+                    ? "border-base-content text-base-content font-medium"
+                    : "border-transparent text-base-content/50 hover:text-base-content/80")
+                }
               >
                 {cat}
               </button>
@@ -209,215 +211,173 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* Main Content Area: Filter Bar + Product Grid */}
-      <main id="products-section" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Controls Row: Condition & Sorting */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-base-content/10">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
-            <SlidersHorizontal className="w-4 h-4 text-primary" />
-            <span>
-              Showing <strong className="text-base-content">{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "product" : "products"}
-            </span>
+      {/* Results */}
+      <main
+        id="products-section"
+        className="flex-1 mx-auto max-w-[84rem] w-full px-5 sm:px-8 py-7"
+      >
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 mb-6">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <p className="text-sm text-base-content/60">
+              <span className="tnum font-medium text-base-content">{filteredProducts.length}</span>{" "}
+              {filteredProducts.length === 1 ? "listing" : "listings"}
+            </p>
 
-            {/* AI Active Filter Badges */}
-            {(maxPrice !== null || minPrice !== null || minStock !== null) && (
-              <div className="flex flex-wrap items-center gap-1.5 ml-2">
-                {maxPrice !== null && (
-                  <span className="badge badge-sm badge-primary gap-1">
-                    Max: ${maxPrice}
-                    <button type="button" onClick={() => setMaxPrice(null)} className="hover:opacity-75">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {minPrice !== null && (
-                  <span className="badge badge-sm badge-primary gap-1">
-                    Min: ${minPrice}
-                    <button type="button" onClick={() => setMinPrice(null)} className="hover:opacity-75">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {minStock !== null && (
-                  <span className="badge badge-sm badge-secondary gap-1">
-                    Stock ≥ {minStock}
-                    <button type="button" onClick={() => setMinStock(null)} className="hover:opacity-75">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
+            {activeChips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={chip.clear}
+                className="inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1 rounded-badge border border-base-300 bg-base-200/70 text-xs text-base-content/70 hover:text-base-content hover:border-base-content/25 transition-colors"
+              >
+                {chip.label}
+                <X className="w-3 h-3" />
+              </button>
+            ))}
 
-            {(searchQuery || selectedCategory !== "All" || selectedCondition !== "All" || maxPrice !== null || minPrice !== null || minStock !== null) && (
+            {hasActiveFilters && (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-xs link link-primary ml-2 font-medium"
+                className="text-xs text-base-content/50 hover:text-base-content underline underline-offset-4 transition-colors"
               >
-                Clear all filters
+                Reset
               </button>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Condition Filter */}
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <span className="text-base-content/60 font-medium">Condition:</span>
-              <select
-                value={selectedCondition}
-                onChange={(e) => setSelectedCondition(e.target.value)}
-                className="select select-bordered select-xs sm:select-sm rounded-lg"
-              >
-                <option value="All">All Conditions</option>
-                <option value="New">Brand New</option>
-                <option value="Used">Used / Pre-owned</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedCondition}
+              onChange={(e) => setSelectedCondition(e.target.value)}
+              className="h-9 px-2.5 pr-7 rounded-btn border border-base-300 bg-base-100 text-sm text-base-content/75 hover:border-base-content/25 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+              aria-label="Filter by condition"
+            >
+              <option value="All">Any condition</option>
+              <option value="New">New</option>
+              <option value="Used">Used</option>
+            </select>
 
-            {/* Sort Options */}
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <ArrowUpDown className="w-3.5 h-3.5 text-base-content/50" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="select select-bordered select-xs sm:select-sm rounded-lg"
-              >
-                <option value="newest">Newest First</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="stock">Most Stock Available</option>
-              </select>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-9 px-2.5 pr-7 rounded-btn border border-base-300 bg-base-100 text-sm text-base-content/75 hover:border-base-content/25 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+              aria-label="Sort listings"
+            >
+              <option value="newest">Newest</option>
+              <option value="price-asc">Price, low to high</option>
+              <option value="price-desc">Price, high to low</option>
+              <option value="stock">Most in stock</option>
+            </select>
           </div>
         </div>
 
-        {/* Product Cards Grid */}
+        {/* Grid */}
         {isLoading ? (
-          /* Loading Skeletons */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="card bg-base-100 shadow-md animate-pulse p-4 space-y-4">
-                <div className="h-44 bg-base-300 rounded-xl w-full" />
-                <div className="h-4 bg-base-300 rounded w-3/4" />
-                <div className="h-3 bg-base-300 rounded w-1/2" />
-                <div className="h-6 bg-base-300 rounded w-1/3 pt-2" />
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[4/3] rounded-box bg-base-200" />
+                <div className="mt-3 h-3.5 w-3/4 rounded bg-base-200" />
+                <div className="mt-2 h-3 w-1/3 rounded bg-base-200" />
+                <div className="mt-3 h-4 w-1/4 rounded bg-base-200" />
               </div>
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <Link
-                key={product._id}
-                to={`/product/${product._id}`}
-                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-content/5 hover:-translate-y-1 flex flex-col justify-between cursor-pointer overflow-hidden group"
-              >
-                {/* Product Image or Fallback */}
-                <div className="relative h-48 w-full bg-base-200/70 overflow-hidden flex items-center justify-center">
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-base-content/30 gap-1.5 p-4 text-center">
-                      <ShoppingBag className="w-10 h-10 stroke-[1.5]" />
-                      <span className="text-[11px] font-medium tracking-wide uppercase">{product.category}</span>
-                    </div>
-                  )}
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
+            {filteredProducts.map((product) => {
+              const stock = product.stock ?? 1;
+              return (
+                <Link
+                  key={product._id}
+                  to={`/product/${product._id}`}
+                  className="group block"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] rounded-box overflow-hidden bg-base-200 border border-base-300/60">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full grid place-items-center">
+                        <span className="font-display text-sm text-base-content/25">
+                          {product.category}
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Top Badges Overlay */}
-                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
-                    <span className="badge badge-sm badge-neutral/80 backdrop-blur-md gap-1 text-[11px] font-medium text-white">
-                      <Tag className="w-2.5 h-2.5" />
-                      {product.category}
-                    </span>
-                    <span
-                      className={`badge badge-sm font-semibold shadow-sm ${
-                        product.condition === "New"
-                          ? "badge-success text-success-content"
-                          : "badge-warning text-warning-content"
-                      }`}
-                    >
-                      {product.condition === "New"
-                        ? "Brand New"
-                        : `Used (${product.ownerCount || 1} owners)`}
-                    </span>
+                    {product.condition !== "New" && (
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-badge bg-base-100/90 backdrop-blur text-[11px] font-medium text-base-content/75">
+                        Used · {product.ownerCount || 1} owner
+                        {(product.ownerCount || 1) === 1 ? "" : "s"}
+                      </span>
+                    )}
+
+                    {stock <= 1 && (
+                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-badge bg-accent text-accent-content text-[11px] font-medium">
+                        Last one
+                      </span>
+                    )}
                   </div>
-                </div>
 
-                <div className="card-body p-5 space-y-3">
-
-                  {/* Title & Price */}
-                  <div>
-                    <h2 className="card-title text-base sm:text-lg font-bold text-base-content line-clamp-1">
+                  {/* Detail */}
+                  <div className="mt-3">
+                    <h2 className="text-[15px] leading-snug font-medium text-base-content line-clamp-2 group-hover:underline underline-offset-[3px] decoration-base-content/30">
                       {product.name}
                     </h2>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-2xl font-black text-primary">
+
+                    <p className="mt-1 text-[13px] text-base-content/50 line-clamp-1">
+                      {product.seller?.name || "Private seller"}
+                      {product.category ? ` · ${product.category}` : ""}
+                    </p>
+
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-[17px] font-semibold tnum text-base-content">
                         ${Number(product.price).toFixed(2)}
-                      </p>
-                      <span
-                        className={`badge badge-xs font-semibold ${
-                          (product.stock || 1) <= 1
-                            ? "badge-error text-error-content"
-                            : "badge-ghost text-base-content/70"
-                        }`}
-                      >
-                        {(product.stock || 1) <= 1 ? "1 left" : `${product.stock} in stock`}
                       </span>
+                      {stock > 1 && (
+                        <span className="text-xs text-base-content/45 tnum">
+                          {stock} available
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  {/* Description */}
-                  <p className="text-xs sm:text-sm text-base-content/70 line-clamp-2">
-                    {product.description}
-                  </p>
-
-                  {/* Seller Info */}
-                  <div className="pt-3 border-t border-base-content/10 flex items-center justify-between text-xs text-base-content/60">
-                    <div className="flex items-center gap-1.5 truncate max-w-[160px]">
-                      <User className="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" />
-                      <span className="truncate">{product.seller?.name || "Seller"}</span>
-                    </div>
-                    <span className="text-[11px] text-base-content/40">
-                      {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : ""}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         ) : (
-          /* Empty State */
-          <div className="card bg-base-100 shadow-sm border border-base-content/10 py-16 px-4 text-center max-w-lg mx-auto">
-            <div className="p-4 bg-base-200 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4 text-base-content/40">
-              <Package className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-base-content mb-1">No products found</h3>
-            <p className="text-sm text-base-content/60 mb-6">
-              {searchQuery || selectedCategory !== "All" || selectedCondition !== "All"
-                ? "No listings match your active filters. Try adjusting your search query."
-                : "No products have been listed yet. Be the first to create one!"}
+          /* Empty */
+          <div className="py-24 text-center">
+            <p className="font-display text-xl text-base-content">
+              {hasActiveFilters ? "Nothing matched that" : "No listings yet"}
+            </p>
+            <p className="mt-2 text-sm text-base-content/55 max-w-sm mx-auto">
+              {hasActiveFilters
+                ? "Try a broader search or clear a filter or two."
+                : "Nobody has listed anything so far. It could be you."}
             </p>
 
-            <div className="flex items-center justify-center gap-3">
-              {(searchQuery || selectedCategory !== "All" || selectedCondition !== "All") && (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-sm btn-outline normal-case font-medium"
                 >
-                  Clear Filters
+                  Clear filters
                 </button>
               )}
               {isSeller && (
-                <Link to="/create" className="btn btn-primary btn-sm gap-1.5">
-                  <PlusCircle className="w-4 h-4" />
-                  List a Product
+                <Link to="/create" className="btn btn-sm btn-primary normal-case font-medium gap-1.5">
+                  <Plus className="w-4 h-4" />
+                  List an item
                 </Link>
               )}
             </div>
@@ -425,7 +385,18 @@ const Homepage = () => {
         )}
       </main>
 
-      {/* Floating AI Shopping Assistant */}
+      {/* Footer */}
+      <footer className="border-t border-base-300 mt-8">
+        <div className="mx-auto max-w-[84rem] px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="font-display text-base font-semibold tracking-tightish text-base-content">
+            Fantastic Buys
+          </p>
+          <p className="text-xs text-base-content/45">
+            A student marketplace project. Orders here are not real.
+          </p>
+        </div>
+      </footer>
+
       <AIChatbot onApplyFilters={handleApplyAIFilters} />
     </div>
   );
