@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PlusCircle, ArrowLeft, Package, DollarSign, Tag, FileText, CheckCircle2, Layers, Image as ImageIcon, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import axiosInstance from "../lib/axios";
@@ -19,7 +19,7 @@ const CATEGORIES = [
 
 const CreateProductPage = () => {
   const navigate = useNavigate();
-  const { user, isSeller, isSellerMode, switchMode } = useAuth();
+  const { isSeller, isSellerMode, switchMode } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -100,258 +100,271 @@ const CreateProductPage = () => {
     }
   };
 
+  const inputClass =
+    "w-full h-11 px-3.5 rounded-btn border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary transition-colors";
+
   return (
-    <div className="min-h-screen bg-base-200">
+    <div className="min-h-screen bg-base-100">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-base-content/70 hover:text-primary mb-6">
+      <div className="mx-auto max-w-[42rem] px-5 sm:px-8 py-8">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-base-content/55 hover:text-base-content transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
-          Back to Products
+          All listings
         </Link>
 
+        <header className="mt-5 mb-8 pb-6 border-b border-base-300">
+          <h1 className="font-display text-[2rem] leading-none font-semibold tracking-tightish text-base-content">
+            List an item
+          </h1>
+          <p className="mt-2.5 text-sm text-base-content/55">
+            The more you say about condition and history, the fewer questions
+            buyers will ask you.
+          </p>
+        </header>
+
         {!isSellerMode && isSeller && (
-          <div className="alert alert-warning mb-6">
-            <span>You are currently in <strong>Customer mode</strong>. Switch to Seller mode to publish products.</span>
+          <div className="mb-8 rounded-box border border-warning/40 bg-warning/[0.08] p-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-base-content/80">
+              You&rsquo;re browsing as a customer right now.
+            </p>
             <button
               type="button"
               onClick={() => switchMode("seller")}
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-neutral normal-case font-medium"
             >
-              Switch to Seller Mode
+              Switch to seller
             </button>
           </div>
         )}
 
-        <div className="card bg-base-100 shadow-xl border border-base-content/5">
-          <div className="card-body p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-base-content/10">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-base-content">List a New Product</h1>
-                <p className="text-sm text-base-content/60">Fill in the details below to publish your listing</p>
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-9">
+          {/* The item */}
+          <fieldset className="space-y-5">
+            <legend className="eyebrow mb-4">The item</legend>
+
+            <div>
+              <label htmlFor="name" className="field-label">What are you selling?</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                className={inputClass}
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              <p className="hint mt-1.5">
+                Make, model and size if they apply — that&rsquo;s what people search for.
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Product Name */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Product Title *</span>
-                </label>
-                <div className="relative">
-                  <Package className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
-                    className="input input-bordered w-full pl-10"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
+            <div>
+              <label htmlFor="description" className="field-label">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows="5"
+                className="w-full px-3.5 py-3 rounded-btn border border-base-300 bg-base-100 text-sm leading-relaxed text-base-content focus:outline-none focus:border-primary transition-colors resize-y"
+                value={formData.description}
+                onChange={handleChange}
+                required
+              />
+              <p className="hint mt-1.5">
+                Wear and tear, what&rsquo;s in the box, whether it&rsquo;s still under warranty.
+              </p>
+            </div>
+          </fieldset>
+
+          {/* Photo */}
+          <fieldset>
+            <legend className="eyebrow mb-4">Photo</legend>
+
+            {formData.image ? (
+              <div className="relative w-full max-w-sm">
+                <div className="aspect-[4/3] rounded-box overflow-hidden border border-base-300 bg-base-200">
+                  <img
+                    src={formData.image}
+                    alt="Listing preview"
+                    className="w-full h-full object-cover"
+                    onError={() => toast.error("Could not load image from this URL")}
                   />
                 </div>
-              </div>
-
-              {/* Product Image */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Product Image</span>
-                  <span className="label-text-alt text-base-content/50">Upload file or paste URL</span>
-                </label>
-
-                {formData.image ? (
-                  /* Image Preview */
-                  <div className="relative rounded-2xl overflow-hidden border border-base-content/10 bg-base-200/50 p-2 max-w-sm">
-                    <img
-                      src={formData.image}
-                      alt="Product preview"
-                      className="w-full h-44 object-cover rounded-xl"
-                      onError={() => toast.error("Could not load image from this URL")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, image: "" }))}
-                      className="btn btn-circle btn-xs btn-error absolute top-4 right-4 shadow-md text-white"
-                      title="Remove image"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  /* Image Input / File Upload */
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <ImageIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-                        <input
-                          type="url"
-                          name="image"
-                          placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-                          className="input input-bordered w-full pl-10 text-sm"
-                          value={formData.image}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <label className="btn btn-outline btn-primary gap-1.5 cursor-pointer">
-                        <Upload className="w-4 h-4" />
-                        <span className="hidden sm:inline">Browse</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                        />
-                      </label>
-                    </div>
-                    <p className="text-[11px] text-base-content/50">
-                      Upload from your device (JPG, PNG, WebP) or paste an online image link.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Price, Stock & Category Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Price ($) *</span>
-                  </label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-                    <input
-                      type="number"
-                      name="price"
-                      min="0"
-                      step="0.01"
-                      placeholder="99.99"
-                      className="input input-bordered w-full pl-10"
-                      value={formData.price}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Quantity / Stock *</span>
-                    <span className="label-text-alt text-base-content/50">e.g. 1, 2, 4</span>
-                  </label>
-                  <div className="relative">
-                    <Layers className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-                    <input
-                      type="number"
-                      name="stock"
-                      min="1"
-                      placeholder="1"
-                      className="input input-bordered w-full pl-10"
-                      value={formData.stock}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Category *</span>
-                  </label>
-                  <div className="relative">
-                    <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40 pointer-events-none" />
-                    <select
-                      name="category"
-                      className="select select-bordered w-full pl-10"
-                      value={formData.category}
-                      onChange={handleChange}
-                    >
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Condition & Previous Owners */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Condition *</span>
-                  </label>
-                  <select
-                    name="condition"
-                    className="select select-bordered w-full"
-                    value={formData.condition}
-                    onChange={handleChange}
-                  >
-                    <option value="New">Brand New</option>
-                    <option value="Used">Used / Pre-owned</option>
-                  </select>
-                </div>
-
-                {formData.condition === "Used" && (
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">Previous Owners *</span>
-                      <span className="label-text-alt text-base-content/50">Count</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="ownerCount"
-                      min="1"
-                      placeholder="1"
-                      className="input input-bordered w-full"
-                      value={formData.ownerCount || ""}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Description *</span>
-                </label>
-                <div className="relative">
-                  <textarea
-                    name="description"
-                    rows="4"
-                    placeholder="Provide details about the item's condition, features, warranty, and specifications..."
-                    className="textarea textarea-bordered w-full"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4">
                 <button
-                  type="submit"
-                  className="btn btn-primary w-full gap-2 shadow-md"
-                  disabled={isLoading}
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, image: "" }))}
+                  className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-base-100/90 backdrop-blur border border-base-300 text-base-content/60 hover:text-error transition-colors"
+                  aria-label="Remove photo"
                 >
-                  {isLoading ? (
-                    <span className="loading loading-spinner loading-sm" />
-                  ) : (
-                    <>
-                      <PlusCircle className="w-5 h-5" />
-                      <span>Publish Product Listing</span>
-                    </>
-                  )}
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </form>
+            ) : (
+              <div className="space-y-3">
+                <label className="flex items-center justify-center gap-2 h-28 rounded-box border border-dashed border-base-300 text-sm text-base-content/55 hover:border-base-content/30 hover:text-base-content/75 cursor-pointer transition-colors">
+                  <Upload className="w-4 h-4" />
+                  Choose a photo from your device
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                <div className="flex items-center gap-3 text-xs text-base-content/35">
+                  <span className="h-px flex-1 bg-base-300" />
+                  or paste a link
+                  <span className="h-px flex-1 bg-base-300" />
+                </div>
+
+                <input
+                  type="url"
+                  name="image"
+                  className={inputClass}
+                  value={formData.image}
+                  onChange={handleChange}
+                  aria-label="Image URL"
+                />
+                <p className="hint">JPG, PNG or WebP, up to 5MB.</p>
+              </div>
+            )}
+          </fieldset>
+
+          {/* Price and stock */}
+          <fieldset className="space-y-5">
+            <legend className="eyebrow mb-4">Price and stock</legend>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="price" className="field-label">Price</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-base-content/40">$</span>
+                  <input
+                    id="price"
+                    type="number"
+                    name="price"
+                    min="0"
+                    step="0.01"
+                    className={inputClass + " pl-7 tnum"}
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="stock" className="field-label">How many</label>
+                <input
+                  id="stock"
+                  type="number"
+                  name="stock"
+                  min="1"
+                  className={inputClass + " tnum"}
+                  value={formData.stock}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="category" className="field-label">Category</label>
+                <select
+                  id="category"
+                  name="category"
+                  className={inputClass + " cursor-pointer"}
+                  value={formData.category}
+                  onChange={handleChange}
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Condition */}
+          <fieldset>
+            <legend className="eyebrow mb-4">Condition</legend>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "New", label: "Brand new", blurb: "Unused, sealed or as sold." },
+                { value: "Used", label: "Used", blurb: "Has had at least one owner." },
+              ].map((option) => {
+                const active = formData.condition === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    className={
+                      "cursor-pointer rounded-box border p-3.5 transition-colors " +
+                      (active
+                        ? "border-primary bg-primary/[0.06]"
+                        : "border-base-300 hover:border-base-content/25")
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="condition"
+                      value={option.value}
+                      checked={active}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <span
+                      className={
+                        "block text-sm font-medium " +
+                        (active ? "text-primary" : "text-base-content")
+                      }
+                    >
+                      {option.label}
+                    </span>
+                    <span className="block mt-1 text-xs leading-snug text-base-content/55">
+                      {option.blurb}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {formData.condition === "Used" && (
+              <div className="mt-4 max-w-[12rem]">
+                <label htmlFor="ownerCount" className="field-label">Previous owners</label>
+                <input
+                  id="ownerCount"
+                  type="number"
+                  name="ownerCount"
+                  min="1"
+                  className={inputClass + " tnum"}
+                  value={formData.ownerCount || ""}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}
+          </fieldset>
+
+          <div className="pt-2 border-t border-base-300">
+            <button
+              type="submit"
+              className="btn btn-primary w-full sm:w-auto sm:px-8 mt-6 normal-case font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="loading loading-spinner loading-sm" />
+              ) : (
+                "Publish listing"
+              )}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

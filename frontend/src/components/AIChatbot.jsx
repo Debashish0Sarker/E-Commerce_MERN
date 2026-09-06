@@ -1,41 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Sparkles,
-  Bot,
-  X,
-  Send,
-  SlidersHorizontal,
-  ArrowRight,
-  Tag,
-  Layers,
-  ShoppingBag,
-  Check,
-  RotateCcw,
-} from "lucide-react";
+import { X, Send, ArrowRight, RotateCcw, MessageSquare } from "lucide-react";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 
 const SUGGESTIONS = [
-  "Show me electronics under $100",
-  "Find brand new items",
-  "Show products with at least 2 in stock",
-  "Find the cheapest products",
+  "Electronics under $100",
+  "Only brand new things",
+  "At least 2 in stock",
+  "Cheapest first",
 ];
+
+const WELCOME = {
+  id: "welcome",
+  sender: "bot",
+  text: "Tell me what you're after — a category, a budget, new or used — and I'll filter the listings for you.",
+  products: [],
+  filters: null,
+};
 
 const AIChatbot = ({ onApplyFilters }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: "welcome",
-      sender: "bot",
-      text: "Hi! 👋 I'm your AI Shopping Assistant. Tell me what product you want, what price or condition, and I'll find it and sort your dashboard automatically!",
-      products: [],
-      filters: null,
-    },
-  ]);
+  const [messages, setMessages] = useState([WELCOME]);
 
   const messagesEndRef = useRef(null);
 
@@ -91,7 +79,7 @@ const AIChatbot = ({ onApplyFilters }) => {
         {
           id: (Date.now() + 1).toString(),
           sender: "bot",
-          text: "Oops, I had trouble finding products right now. Please try again or rephrase your request!",
+          text: "I couldn't reach the listings just then. Try again, or word it differently.",
         },
       ]);
     } finally {
@@ -100,160 +88,123 @@ const AIChatbot = ({ onApplyFilters }) => {
   };
 
   const handleReset = () => {
-    setMessages([
-      {
-        id: "welcome",
-        sender: "bot",
-        text: "Hi! 👋 I'm your AI Shopping Assistant. Tell me what product you want, what price or condition, and I'll find it and sort your dashboard automatically!",
-        products: [],
-        filters: null,
-      },
-    ]);
+    setMessages([WELCOME]);
   };
 
   return (
     <>
-      {/* Floating Toggle Button */}
+      {/* Launcher */}
       {!isOpen && (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 btn btn-primary btn-circle btn-lg shadow-2xl hover:scale-110 transition-transform duration-200 border-2 border-primary-content/20 flex items-center justify-center group"
-          title="Open AI Shopping Assistant"
+          className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 h-11 pl-4 pr-5 rounded-full bg-base-content text-base-100 text-sm font-medium shadow-lift hover:opacity-90 transition-opacity"
         >
-          <div className="relative">
-            <Sparkles className="w-6 h-6 animate-pulse" />
-            <span className="absolute -top-2 -right-2 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
-            </span>
-          </div>
+          <MessageSquare className="w-4 h-4" />
+          Help me find something
         </button>
       )}
 
-      {/* Chat Window */}
+      {/* Panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-50 w-[92vw] sm:w-[410px] h-[550px] max-h-[85vh] bg-base-100 rounded-3xl shadow-2xl border border-base-content/10 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-5 right-4 sm:right-6 z-40 w-[92vw] sm:w-[24rem] h-[32rem] max-h-[80vh] bg-base-100 border border-base-300 rounded-box shadow-lift flex flex-col overflow-hidden animate-riseIn">
           {/* Header */}
-          <div className="p-4 bg-primary text-primary-content flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-primary-content/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-content" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm leading-none">AI Shopping Assistant</h3>
-                  <span className="badge badge-xs badge-secondary font-semibold text-[10px] uppercase">
-                    AI
-                  </span>
-                </div>
-                <p className="text-[11px] opacity-80 mt-0.5">Finds & filters products for you</p>
-              </div>
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-base-300">
+            <div>
+              <h2 className="text-sm font-medium text-base-content">Find something</h2>
+              <p className="text-xs text-base-content/50">Filters the listings as you ask</p>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <button
                 type="button"
                 onClick={handleReset}
-                className="btn btn-ghost btn-xs btn-circle text-primary-content hover:bg-primary-content/20"
-                title="Reset conversation"
+                className="p-1.5 rounded-btn text-base-content/45 hover:text-base-content hover:bg-base-200 transition-colors"
+                title="Start over"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="btn btn-ghost btn-xs btn-circle text-primary-content hover:bg-primary-content/20"
-                title="Close chat"
+                className="p-1.5 rounded-btn text-base-content/45 hover:text-base-content hover:bg-base-200 transition-colors"
+                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-base-200/40 text-xs">
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto thin-scroll px-4 py-4 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`chat ${msg.sender === "user" ? "chat-end" : "chat-start"}`}
+                className={msg.sender === "user" ? "flex justify-end" : ""}
               >
-                {msg.sender === "bot" && (
-                  <div className="chat-image avatar">
-                    <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                  </div>
-                )}
-
                 <div
-                  className={`chat-bubble text-xs ${
+                  className={
                     msg.sender === "user"
-                      ? "chat-bubble-primary text-primary-content font-medium"
-                      : "bg-base-100 text-base-content shadow-sm border border-base-content/5 leading-relaxed"
-                  }`}
+                      ? "max-w-[85%] px-3.5 py-2 rounded-box bg-base-content text-base-100 text-[13px] leading-relaxed"
+                      : "max-w-[92%] text-[13px] leading-relaxed text-base-content/85"
+                  }
                 >
                   {msg.text}
 
-                  {/* Active Filter Tags */}
+                  {/* Filters the assistant applied */}
                   {msg.filters && (
-                    <div className="mt-2.5 pt-2 border-t border-base-content/10 flex flex-wrap gap-1">
-                      {msg.filters.category && msg.filters.category !== "All" && (
-                        <span className="badge badge-xs badge-primary font-medium">
-                          {msg.filters.category}
-                        </span>
-                      )}
-                      {msg.filters.condition && (
-                        <span className="badge badge-xs badge-secondary font-medium">
-                          {msg.filters.condition}
-                        </span>
-                      )}
-                      {msg.filters.maxPrice && (
-                        <span className="badge badge-xs badge-ghost font-medium">
-                          ≤ ${msg.filters.maxPrice}
-                        </span>
-                      )}
-                      {msg.filters.minStock && (
-                        <span className="badge badge-xs badge-ghost font-medium">
-                          Stock ≥ {msg.filters.minStock}
-                        </span>
-                      )}
-                      {msg.filters.sortBy && msg.filters.sortBy !== "default" && (
-                        <span className="badge badge-xs badge-outline font-medium">
-                          Sort: {msg.filters.sortBy}
-                        </span>
-                      )}
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {[
+                        msg.filters.category !== "All" && msg.filters.category,
+                        msg.filters.condition,
+                        msg.filters.maxPrice && `under $${msg.filters.maxPrice}`,
+                        msg.filters.minStock && `${msg.filters.minStock}+ in stock`,
+                        msg.filters.sortBy &&
+                          msg.filters.sortBy !== "default" &&
+                          `sorted by ${msg.filters.sortBy}`,
+                      ]
+                        .filter(Boolean)
+                        .map((label) => (
+                          <span
+                            key={label}
+                            className="px-2 py-0.5 rounded-badge border border-base-300 bg-base-200/70 text-[11px] text-base-content/65"
+                          >
+                            {label}
+                          </span>
+                        ))}
                     </div>
                   )}
 
-                  {/* Product Cards preview inside chat */}
+                  {/* Matching listings */}
                   {msg.products && msg.products.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-base-content/70">
-                        <span>Recommended Items ({msg.products.length})</span>
+                    <div className="mt-3.5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="eyebrow">
+                          {msg.products.length} match
+                          {msg.products.length === 1 ? "" : "es"}
+                        </span>
                         {onApplyFilters && msg.filters && (
                           <button
                             type="button"
                             onClick={() => {
                               onApplyFilters(msg.filters);
-                              toast.success("Applied to dashboard!");
+                              toast.success("Filters applied");
                             }}
-                            className="link link-primary inline-flex items-center gap-1 font-bold"
+                            className="text-[11px] text-base-content/55 hover:text-base-content underline underline-offset-4 transition-colors"
                           >
-                            <Check className="w-3 h-3" />
-                            Apply filters
+                            Apply to page
                           </button>
                         )}
                       </div>
 
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      <div className="space-y-1 max-h-52 overflow-y-auto thin-scroll -mx-1.5 px-1.5">
                         {msg.products.map((item) => (
                           <Link
                             key={item._id}
                             to={`/product/${item._id}`}
-                            className="flex items-center gap-2 p-2 rounded-xl bg-base-200/70 hover:bg-base-200 transition-colors border border-base-content/5 group"
+                            className="flex items-center gap-2.5 p-1.5 rounded-btn hover:bg-base-200 transition-colors group"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-base-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-base-content/10">
+                            <div className="w-11 h-11 shrink-0 rounded-btn overflow-hidden bg-base-200 border border-base-300/60">
                               {item.image ? (
                                 <img
                                   src={item.image}
@@ -261,24 +212,22 @@ const AIChatbot = ({ onApplyFilters }) => {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <ShoppingBag className="w-5 h-5 text-base-content/30" />
+                                <span className="w-full h-full grid place-items-center font-display text-[10px] text-base-content/25">
+                                  {item.category?.slice(0, 3)}
+                                </span>
                               )}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-xs text-base-content truncate group-hover:text-primary transition-colors">
+                              <p className="text-[13px] text-base-content truncate">
                                 {item.name}
                               </p>
-                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-base-content/60">
-                                <span className="font-bold text-primary">
-                                  ${Number(item.price).toFixed(2)}
-                                </span>
-                                <span>•</span>
-                                <span>{item.stock} in stock</span>
-                              </div>
+                              <p className="text-[11px] text-base-content/50 tnum">
+                                ${Number(item.price).toFixed(2)} · {item.stock} in stock
+                              </p>
                             </div>
 
-                            <ArrowRight className="w-3.5 h-3.5 text-base-content/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                            <ArrowRight className="w-3.5 h-3.5 text-base-content/25 group-hover:text-base-content/60 transition-colors shrink-0" />
                           </Link>
                         ))}
                       </div>
@@ -288,57 +237,41 @@ const AIChatbot = ({ onApplyFilters }) => {
               </div>
             ))}
 
-            {/* Quick Suggestions (Shown when only welcome message exists) */}
+            {/* Openers */}
             {messages.length === 1 && (
-              <div className="pt-2 space-y-1.5">
-                <p className="text-[11px] font-semibold text-base-content/50 uppercase tracking-wider">
-                  Suggested Prompts:
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {SUGGESTIONS.map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSendMessage(suggestion)}
-                      className="btn btn-outline btn-xs justify-start normal-case text-[11px] font-normal hover:btn-primary text-left"
-                    >
-                      💬 {suggestion}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => handleSendMessage(suggestion)}
+                    className="px-2.5 py-1.5 rounded-badge border border-base-300 text-xs text-base-content/65 hover:border-base-content/25 hover:text-base-content transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
             )}
 
-            {/* Loading Indicator */}
             {isLoading && (
-              <div className="chat chat-start">
-                <div className="chat-image avatar">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                </div>
-                <div className="chat-bubble bg-base-100 text-base-content shadow-sm border border-base-content/5 flex items-center gap-2">
-                  <span className="loading loading-dots loading-xs text-primary" />
-                  <span className="text-[11px] text-base-content/60">Thinking & sorting...</span>
-                </div>
-              </div>
+              <p className="text-[13px] text-base-content/45">Looking…</p>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Footer */}
+          {/* Composer */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="p-3 bg-base-100 border-t border-base-content/10 flex items-center gap-2"
+            className="flex items-center gap-2 px-3 py-3 border-t border-base-300"
           >
             <input
               type="text"
-              placeholder="e.g. Find used cars or cheap electronics..."
-              className="input input-bordered input-sm flex-1 text-xs focus:outline-primary"
+              placeholder="What are you looking for?"
+              className="flex-1 h-9 px-3 rounded-btn border border-base-300 bg-base-100 text-[13px] text-base-content placeholder:text-base-content/35 focus:outline-none focus:border-primary transition-colors"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}
@@ -346,8 +279,8 @@ const AIChatbot = ({ onApplyFilters }) => {
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="btn btn-primary btn-sm btn-circle"
-              title="Send query"
+              className="w-9 h-9 shrink-0 grid place-items-center rounded-btn bg-base-content text-base-100 disabled:opacity-25 hover:opacity-90 transition-opacity"
+              aria-label="Send"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

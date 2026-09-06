@@ -1,14 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  ShoppingBag, 
-  PlusCircle, 
-  Sun, 
-  Moon, 
-  LogIn, 
-  LogOut, 
-  User as UserIcon,
+import {
+  Sun,
+  Moon,
+  LogOut,
+  Plus,
   RefreshCw,
-  ShoppingCart
+  ShoppingBag,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -31,122 +29,137 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-base-100/90 backdrop-blur-md border-b border-base-content/10 transition-colors">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Brand / Logo */}
-          <Link 
-            to="/" 
-            className="flex items-center gap-2.5 font-extrabold text-xl tracking-tight text-base-content hover:opacity-90 transition-opacity"
-          >
-            <div className="p-2 rounded-xl bg-primary text-primary-content shadow-md shadow-primary/20">
-              <ShoppingBag className="w-5 h-5" />
-            </div>
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Fantastic Buyssss
+    <header className="sticky top-0 z-40 bg-base-100/85 backdrop-blur border-b border-base-300">
+      <div className="mx-auto max-w-[84rem] px-5 sm:px-8">
+        <div className="flex h-[60px] items-center justify-between gap-6">
+          {/* Wordmark */}
+          <Link to="/" className="flex items-baseline gap-2 group">
+            <span className="font-display text-[1.35rem] leading-none font-semibold tracking-tightish text-base-content">
+              Fantastic Buys
+            </span>
+            <span className="hidden sm:block text-[10px] uppercase tracking-[0.16em] text-base-content/40 pb-[2px]">
+              Marketplace
             </span>
           </Link>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Theme Toggle Button (Light / Dark mode) */}
+          <nav className="flex items-center gap-1">
+            {isSeller && (
+              <Link
+                to="/create"
+                className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-base-content/70 hover:text-base-content px-3 py-2 rounded-btn hover:bg-base-200 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Sell an item
+              </Link>
+            )}
+
             <button
               type="button"
               onClick={toggleTheme}
-              className="btn btn-ghost btn-circle btn-sm sm:btn-md"
-              title={`Switch to ${theme === "dark" ? "Light" : "Dark"} mode`}
-              aria-label="Toggle Theme"
+              className="p-2 rounded-btn text-base-content/60 hover:text-base-content hover:bg-base-200 transition-colors"
+              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+              aria-label="Toggle colour theme"
             >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5 text-warning transition-transform hover:rotate-45" />
-              ) : (
-                <Moon className="w-5 h-5 text-primary transition-transform hover:-rotate-12" />
-              )}
+              {theme === "dark" ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
 
-            {/* Cart Button */}
             <Link
               to="/cart"
-              className="btn btn-ghost btn-circle btn-sm sm:btn-md relative"
-              title="View Shopping Cart"
-              aria-label="View Shopping Cart"
+              className="relative p-2 rounded-btn text-base-content/60 hover:text-base-content hover:bg-base-200 transition-colors"
+              aria-label={`Cart, ${cartCount} items`}
             >
-              <ShoppingCart className="w-5 h-5 text-base-content" />
+              <ShoppingBag className="w-[18px] h-[18px]" />
               {cartCount > 0 && (
-                <span className="badge badge-primary badge-xs sm:badge-sm absolute -top-1 -right-1 font-extrabold shadow-sm">
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-accent text-accent-content text-[10px] font-semibold leading-4 text-center tnum">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* Authenticated Controls */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-2 sm:gap-3">
-                {/* Create Product button (for Sellers / Admins) */}
-                {isSeller && (
-                  <Link
-                    to="/create"
-                    className="btn btn-primary btn-sm hidden sm:inline-flex items-center gap-1.5 shadow-sm"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Create Product</span>
-                  </Link>
-                )}
-
-                {/* Seller Mode Switcher button */}
-                {isSeller && (
-                  <button
-                    type="button"
-                    onClick={handleToggleMode}
-                    className="btn btn-outline btn-xs sm:btn-sm gap-1 hidden md:inline-flex"
-                    title={`Currently in ${user.currentMode} mode. Click to switch.`}
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span className="capitalize">{user.currentMode || "customer"} mode</span>
-                  </button>
-                )}
-
-                {/* User Info / Badge */}
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-base-200 text-base-content text-xs sm:text-sm font-medium">
-                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">
-                    {user?.name?.charAt(0)?.toUpperCase() || <UserIcon className="w-3.5 h-3.5" />}
-                  </div>
-                  <span className="hidden sm:inline max-w-[120px] truncate">{user?.name}</span>
-                  <span className="badge badge-primary badge-xs sm:badge-sm uppercase font-semibold">
-                    {user?.role}
+              <div className="dropdown dropdown-end ml-1">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn hover:bg-base-200 transition-colors cursor-pointer"
+                >
+                  <span className="w-7 h-7 rounded-full bg-primary text-primary-content grid place-items-center text-xs font-semibold">
+                    {user?.name?.charAt(0)?.toUpperCase() || "?"}
                   </span>
+                  <span className="hidden md:block max-w-[110px] truncate text-sm font-medium text-base-content">
+                    {user?.name}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-base-content/40" />
                 </div>
 
-                {/* Logout Button */}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="btn btn-ghost btn-sm sm:btn-md gap-1.5 text-error hover:bg-error/10"
-                  title="Log out of your account"
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content mt-2 w-60 p-1.5 surface shadow-lift z-50"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
+                  <li className="px-3 py-2.5 border-b border-base-300/70 mb-1">
+                    <p className="text-sm font-medium text-base-content truncate">{user?.name}</p>
+                    <p className="text-xs text-base-content/50 truncate">
+                      {user?.email || `@${user?.username}`}
+                    </p>
+                    <p className="mt-1.5 text-[11px] text-base-content/50 capitalize">
+                      {user?.role}
+                      {isSeller && user?.currentMode ? ` · browsing as ${user.currentMode}` : ""}
+                    </p>
+                  </li>
+
+                  {isSeller && (
+                    <>
+                      <li>
+                        <Link
+                          to="/create"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-btn text-sm text-base-content/80 hover:bg-base-200 transition-colors sm:hidden"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Sell an item
+                        </Link>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={handleToggleMode}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-btn text-sm text-base-content/80 hover:bg-base-200 transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Switch to {user?.currentMode === "seller" ? "customer" : "seller"}
+                        </button>
+                      </li>
+                    </>
+                  )}
+
+                  <li>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-btn text-sm text-error hover:bg-error/10 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign out
+                    </button>
+                  </li>
+                </ul>
               </div>
             ) : (
-              /* Unauthenticated Controls */
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 ml-1">
                 <Link
                   to="/login"
-                  className="btn btn-primary btn-sm sm:btn-md gap-1.5 shadow-sm"
+                  className="text-sm font-medium text-base-content/70 hover:text-base-content px-3 py-2 rounded-btn hover:bg-base-200 transition-colors"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
+                  Sign in
                 </Link>
                 <Link
                   to="/register"
-                  className="btn btn-ghost btn-sm sm:btn-md hidden sm:inline-flex"
+                  className="text-sm font-medium bg-base-content text-base-100 px-3.5 py-2 rounded-btn hover:opacity-90 transition-opacity"
                 >
-                  Sign Up
+                  Join
                 </Link>
               </div>
             )}
-          </div>
+          </nav>
         </div>
       </div>
     </header>

@@ -1,33 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Tag,
-  User,
-  Mail,
-  Phone,
-  AtSign,
-  Calendar,
-  Package,
-  ShoppingCart,
-  Zap,
-  Clock,
-  Users,
-  BadgeCheck,
-  AlertTriangle,
-  CreditCard,
-  Truck,
-  CheckCircle2,
-  X,
-  ShieldCheck,
-  MapPin,
-  Lock,
-  Layers,
-  Plus,
-  Minus,
-} from "lucide-react";
+import { ArrowLeft, Plus, Minus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
+import CheckoutDialog from "../components/CheckoutDialog";
 import axiosInstance from "../lib/axios";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -202,650 +178,287 @@ const SeeProduct = () => {
     return diffMonths + (diffMonths === 1 ? " month ago" : " months ago");
   };
 
+  const formatDate = (value) =>
+    new Date(value).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+  // Key/value rows under the description.
+  const specs = product
+    ? [
+        ["Category", product.category],
+        ["Condition", product.condition === "New" ? "Brand new" : "Used"],
+        [
+          "Previous owners",
+          product.condition === "New"
+            ? "None"
+            : `${product.ownerCount || 0} ${(product.ownerCount || 0) === 1 ? "owner" : "owners"}`,
+        ],
+        ["Listed", product.createdAt ? formatDate(product.createdAt) : "Unknown"],
+        product.updatedAt && product.updatedAt !== product.createdAt
+          ? ["Last updated", formatDate(product.updatedAt)]
+          : null,
+        ["Reference", product._id],
+      ].filter(Boolean)
+    : [];
+
   return (
-    <div className="min-h-screen bg-base-200/50 flex flex-col">
+    <div className="min-h-screen bg-base-100 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
+      <main className="flex-1 mx-auto max-w-[76rem] w-full px-5 sm:px-8 py-8">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-sm text-base-content/70 hover:text-primary mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-base-content/55 hover:text-base-content transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Marketplace
+          All listings
         </Link>
 
-        {/* Loading state */}
+        {/* Loading */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <span className="loading loading-spinner loading-lg text-primary" />
-            <p className="text-base-content/50 text-sm">Loading product details...</p>
-          </div>
-        )}
-
-        {/* Error state */}
-        {error && !isLoading && (
-          <div className="card bg-base-100 shadow-md border border-error/20 max-w-lg mx-auto">
-            <div className="card-body items-center text-center py-16">
-              <div className="p-4 bg-error/10 rounded-full mb-4">
-                <AlertTriangle className="w-10 h-10 text-error" />
-              </div>
-              <h2 className="text-xl font-bold text-base-content mb-1">Product Not Found</h2>
-              <p className="text-sm text-base-content/60 mb-6">{error}</p>
-              <Link to="/" className="btn btn-primary btn-sm gap-1.5">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Marketplace
-              </Link>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-10 mt-6 animate-pulse">
+            <div className="aspect-[4/3] rounded-box bg-base-200" />
+            <div className="space-y-4 pt-2">
+              <div className="h-7 w-3/4 rounded bg-base-200" />
+              <div className="h-5 w-1/4 rounded bg-base-200" />
+              <div className="h-24 w-full rounded bg-base-200" />
             </div>
           </div>
         )}
 
-        {/* Product Details */}
+        {/* Error */}
+        {error && !isLoading && (
+          <div className="py-24 text-center">
+            <p className="font-display text-xl text-base-content">
+              This listing isn&rsquo;t here
+            </p>
+            <p className="mt-2 text-sm text-base-content/55">{error}</p>
+            <Link to="/" className="btn btn-outline btn-sm mt-6 normal-case font-medium">
+              Back to listings
+            </Link>
+          </div>
+        )}
+
+        {/* Product */}
         {product && !isLoading && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column: Main Product Info (2/3 width) */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Product Image Card */}
-              {product.image && (
-                <div className="card bg-base-100 shadow-md border border-base-content/5 overflow-hidden">
-                  <div className="relative w-full max-h-[440px] bg-base-200/60 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full max-h-[440px] object-cover"
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-x-12 gap-y-8 mt-6 items-start">
+            {/* Left: image + copy */}
+            <div>
+              <div className="aspect-[4/3] rounded-box overflow-hidden bg-base-200 border border-base-300/60">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full grid place-items-center gap-2 text-base-content/25">
+                    <ShoppingBag className="w-8 h-8 stroke-[1.25] mx-auto" />
+                    <span className="font-display text-sm">{product.category}</span>
                   </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <section className="mt-10">
+                <h2 className="eyebrow mb-3">Description</h2>
+                <p className="text-[15px] leading-[1.75] text-base-content/80 whitespace-pre-wrap max-w-prose">
+                  {product.description}
+                </p>
+              </section>
+
+              {/* Specs */}
+              <section className="mt-10">
+                <h2 className="eyebrow mb-1">Details</h2>
+                <dl className="divide-y divide-base-300/70">
+                  {specs.map(([label, value]) => (
+                    <div key={label} className="flex items-baseline justify-between gap-6 py-3">
+                      <dt className="text-sm text-base-content/50 shrink-0">{label}</dt>
+                      <dd
+                        className={
+                          "text-sm text-base-content text-right " +
+                          (label === "Reference" ? "font-mono text-xs text-base-content/50 break-all" : "")
+                        }
+                      >
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            </div>
+
+            {/* Right: buy panel */}
+            <div className="lg:sticky lg:top-[76px] space-y-6">
+              <div>
+                <p className="text-sm text-base-content/50">
+                  {product.condition === "New" ? "Brand new" : "Used"}
+                  {" · "}
+                  Listed {getTimeAgo(product.createdAt)}
+                </p>
+
+                <h1 className="mt-2 font-display text-[1.9rem] leading-[1.15] font-semibold tracking-tightish text-base-content">
+                  {product.name}
+                </h1>
+
+                <p className="mt-3 text-[1.75rem] leading-none font-semibold tnum text-base-content">
+                  ${Number(product.price).toFixed(2)}
+                </p>
+
+                <p className="mt-2.5 text-sm text-base-content/55 tnum">
+                  {maxStock <= 0
+                    ? "Out of stock"
+                    : maxStock === 1
+                    ? "Only one left"
+                    : `${maxStock} available`}
+                </p>
+              </div>
+
+              {isOwnProduct ? (
+                <div className="rounded-box border border-base-300 bg-base-200/50 p-4">
+                  <p className="text-sm font-medium text-base-content">
+                    This is your listing
+                  </p>
+                  <p className="mt-1 text-sm text-base-content/55">
+                    You can&rsquo;t buy from yourself, but this is how buyers see it.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Quantity */}
+                  <div className="flex items-center justify-between gap-4 py-3 border-y border-base-300">
+                    <span className="text-sm text-base-content/60">Quantity</span>
+                    <div className="flex items-center gap-4">
+                      <div className="inline-flex items-center rounded-btn border border-base-300">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQuantity((q) => Math.max(1, q - 1))}
+                          disabled={selectedQuantity <= 1}
+                          className="w-8 h-8 grid place-items-center text-base-content/60 hover:text-base-content hover:bg-base-200 rounded-l-btn transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-9 text-center text-sm tnum font-medium text-base-content">
+                          {selectedQuantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQuantity((q) => Math.min(maxStock, q + 1))}
+                          disabled={selectedQuantity >= maxStock}
+                          className="w-8 h-8 grid place-items-center text-base-content/60 hover:text-base-content hover:bg-base-200 rounded-r-btn transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {selectedQuantity > 1 && (
+                        <span className="text-sm font-medium tnum text-base-content">
+                          ${(Number(product.price) * selectedQuantity).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary w-full normal-case font-medium"
+                    onClick={handleOpenBuyNow}
+                    disabled={maxStock <= 0}
+                  >
+                    Buy now
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline w-full normal-case font-medium"
+                    onClick={handleAddToCart}
+                    disabled={maxStock <= 0}
+                  >
+                    Add to cart
+                  </button>
+
+                  <p className="hint text-center pt-1">Free delivery on every order.</p>
                 </div>
               )}
 
-              {/* Product Header Card */}
-              <div className="card bg-base-100 shadow-md border border-base-content/5">
-                <div className="card-body p-6 sm:p-8">
-                  {/* Badges Row */}
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="badge badge-ghost gap-1.5 text-xs font-medium">
-                      <Tag className="w-3 h-3" />
-                      {product.category}
-                    </span>
-                    <span
-                      className={
-                        "badge font-semibold " +
-                        (product.condition === "New"
-                          ? "badge-success text-success-content"
-                          : "badge-warning text-warning-content")
-                      }
-                    >
-                      {product.condition === "New" ? "Brand New" : "Used / Pre-owned"}
-                    </span>
-                    <span
-                      className={`badge font-semibold text-xs ${
-                        (product.stock || 1) <= 1
-                          ? "badge-error text-error-content"
-                          : "badge-primary text-primary-content"
-                      }`}
-                    >
-                      <Layers className="w-3 h-3 mr-1" />
-                      {(product.stock || 1) <= 1
-                        ? "Only 1 unit in stock!"
-                        : `${product.stock} units available`}
-                    </span>
-                    <span className="badge badge-ghost gap-1.5 text-xs">
-                      <Clock className="w-3 h-3" />
-                      Listed {getTimeAgo(product.createdAt)}
-                    </span>
-                  </div>
+              {/* Seller */}
+              <section className="rounded-box border border-base-300 p-5">
+                <h2 className="eyebrow mb-4">Sold by</h2>
 
-                  {/* Product Title */}
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content leading-tight">
-                    {product.name}
-                  </h1>
-
-                  {/* Price */}
-                  <p className="text-3xl sm:text-4xl font-black text-primary mt-3">
-                    ${Number(product.price).toFixed(2)}
-                  </p>
-
-                  {/* Divider */}
-                  <div className="divider my-4" />
-
-                  {/* Description */}
-                  <div>
-                    <h3 className="text-sm font-bold text-base-content uppercase tracking-wider mb-2">
-                      Description
-                    </h3>
-                    <p className="text-base-content/80 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                      {product.description}
+                <div className="flex items-center gap-3">
+                  <span className="w-10 h-10 rounded-full bg-base-200 border border-base-300 grid place-items-center text-sm font-medium text-base-content/70">
+                    {product.seller?.name?.charAt(0)?.toUpperCase() || "?"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-base-content truncate">
+                      {product.seller?.name || "Unknown seller"}
                     </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Details Card */}
-              <div className="card bg-base-100 shadow-md border border-base-content/5">
-                <div className="card-body p-6 sm:p-8">
-                  <h3 className="text-sm font-bold text-base-content uppercase tracking-wider mb-4">
-                    Product Details
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
-                    {/* Category */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                        <Tag className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50 font-medium">Category</p>
-                        <p className="text-sm font-semibold text-base-content">{product.category}</p>
-                      </div>
-                    </div>
-
-                    {/* Condition */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                        <BadgeCheck className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50 font-medium">Condition</p>
-                        <p className="text-sm font-semibold text-base-content">{product.condition}</p>
-                      </div>
-                    </div>
-
-                    {/* Owner Count (for Used items) */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                        <Users className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50 font-medium">Previous Owners</p>
-                        <p className="text-sm font-semibold text-base-content">
-                          {product.condition === "New"
-                            ? "None (Brand New)"
-                            : (product.ownerCount || 0) + (product.ownerCount === 1 ? " owner" : " owners")}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Date Listed */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                        <Calendar className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50 font-medium">Date Listed</p>
-                        <p className="text-sm font-semibold text-base-content">
-                          {product.createdAt
-                            ? new Date(product.createdAt).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })
-                            : "Unknown"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Last Updated */}
-                    {product.updatedAt && product.updatedAt !== product.createdAt && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                          <Clock className="w-4 h-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-base-content/50 font-medium">Last Updated</p>
-                          <p className="text-sm font-semibold text-base-content">
-                            {new Date(product.updatedAt).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Product ID */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-primary/10 rounded-lg flex-shrink-0">
-                        <Package className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50 font-medium">Product ID</p>
-                        <p className="text-xs font-mono text-base-content/70">{product._id}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Seller + Action Buttons (1/3 width) */}
-            <div className="space-y-6">
-              {/* Action Buttons Card */}
-              <div className="card bg-base-100 shadow-md border border-base-content/5 sticky top-24">
-                <div className="card-body p-6 space-y-3">
-                  <p className="text-3xl font-black text-primary text-center">
-                    ${Number(product.price).toFixed(2)}
-                  </p>
-
-                  {isOwnProduct ? (
-                    /* Seller viewing their own product */
-                    <div className="text-center py-3 space-y-2">
-                      <div className="badge badge-info gap-1.5 py-3 px-4 font-medium">
-                        <Package className="w-4 h-4" />
-                        This is your listing
-                      </div>
-                      <p className="text-xs text-base-content/50">
-                        You cannot buy your own product.
-                      </p>
-                    </div>
-                  ) : (
-                    /* Regular buyer view */
-                    <>
-                      {/* Quantity Selector */}
-                      <div className="bg-base-200/60 p-3.5 rounded-xl space-y-2 border border-base-content/10">
-                        <div className="flex items-center justify-between text-xs font-semibold text-base-content/70">
-                          <span>Select Quantity:</span>
-                          <span className="text-base-content/50">
-                            {maxStock} {maxStock === 1 ? "unit" : "units"} available
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center border border-base-content/20 rounded-lg bg-base-100">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQuantity((q) => Math.max(1, q - 1))}
-                              disabled={selectedQuantity <= 1}
-                              className="btn btn-ghost btn-xs btn-square disabled:opacity-30"
-                              title="Decrease quantity"
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span className="w-10 text-center text-sm font-bold text-base-content">
-                              {selectedQuantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQuantity((q) => Math.min(maxStock, q + 1))}
-                              disabled={selectedQuantity >= maxStock}
-                              className="btn btn-ghost btn-xs btn-square disabled:opacity-30"
-                              title="Increase quantity"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          <div className="text-right">
-                            <p className="text-[11px] text-base-content/50">
-                              Subtotal ({selectedQuantity} {selectedQuantity === 1 ? "unit" : "units"}):
-                            </p>
-                            <p className="text-primary font-black text-lg">
-                              ${(Number(product.price) * selectedQuantity).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="btn btn-primary w-full gap-2 shadow-md hover:scale-[1.01] transition-transform"
-                        onClick={handleOpenBuyNow}
-                        disabled={maxStock <= 0}
-                      >
-                        <Zap className="w-5 h-5" />
-                        Buy Now {selectedQuantity > 1 ? `(${selectedQuantity} units)` : ""}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-primary w-full gap-2 hover:scale-[1.01] transition-transform"
-                        onClick={handleAddToCart}
-                        disabled={maxStock <= 0}
-                      >
-                        <ShoppingCart className="w-5 h-5" />
-                        Add to Cart {selectedQuantity > 1 ? `(${selectedQuantity} units)` : ""}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Seller Info Card */}
-              <div className="card bg-base-100 shadow-md border border-base-content/5">
-                <div className="card-body p-6">
-                  <h3 className="text-sm font-bold text-base-content uppercase tracking-wider mb-4">
-                    Seller Information
-                  </h3>
-
-                  <div className="space-y-4">
-                    {/* Seller Name */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {product.seller?.name?.charAt(0)?.toUpperCase() || "S"}
-                      </div>
-                      <div>
-                        <p className="text-xs text-base-content/50">Seller</p>
-                        <p className="text-sm font-bold text-base-content">
-                          {product.seller?.name || "Unknown Seller"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="divider my-0" />
-
-                    {/* Username */}
                     {product.seller?.username && (
-                      <div className="flex items-center gap-3">
-                        <AtSign className="w-4 h-4 text-base-content/40 flex-shrink-0" />
-                        <div>
-                          <p className="text-xs text-base-content/50">Username</p>
-                          <p className="text-sm text-base-content font-medium">@{product.seller.username}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Email */}
-                    {product.seller?.email && (
-                      <div className="flex items-center gap-3">
-                        <Mail className="w-4 h-4 text-base-content/40 flex-shrink-0" />
-                        <div>
-                          <p className="text-xs text-base-content/50">Email</p>
-                          <p className="text-sm text-base-content font-medium">{product.seller.email}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Phone */}
-                    {product.seller?.phoneNumber && (
-                      <div className="flex items-center gap-3">
-                        <Phone className="w-4 h-4 text-base-content/40 flex-shrink-0" />
-                        <div>
-                          <p className="text-xs text-base-content/50">Phone</p>
-                          <p className="text-sm text-base-content font-medium">{product.seller.phoneNumber}</p>
-                        </div>
-                      </div>
+                      <p className="text-xs text-base-content/50 truncate">
+                        @{product.seller.username}
+                      </p>
                     )}
                   </div>
                 </div>
-              </div>
+
+                {(product.seller?.email || product.seller?.phoneNumber) && (
+                  <dl className="mt-4 pt-4 border-t border-base-300/70 space-y-2">
+                    {product.seller?.email && (
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-xs text-base-content/50">Email</dt>
+                        <dd className="text-xs text-base-content/80 truncate">
+                          {product.seller.email}
+                        </dd>
+                      </div>
+                    )}
+                    {product.seller?.phoneNumber && (
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-xs text-base-content/50">Phone</dt>
+                        <dd className="text-xs text-base-content/80 tnum">
+                          {product.seller.phoneNumber}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
+              </section>
             </div>
           </div>
         )}
       </main>
 
-      {/* Checkout / Buy Now Modal */}
-      {isCheckoutOpen && product && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-content/10 max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 sm:p-7 space-y-6">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-base-content/10">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-base-content">Checkout</h3>
-                  <p className="text-xs text-base-content/60">Choose your preferred payment method</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCheckoutOpen(false)}
-                className="btn btn-ghost btn-sm btn-circle"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Order Item Summary */}
-            <div className="bg-base-200/60 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <h4 className="font-bold text-sm text-base-content line-clamp-1">{product.name}</h4>
-                <div className="flex items-center gap-2 text-xs text-base-content/60">
-                  <span>Unit: ${Number(product.price).toFixed(2)}</span>
-                  <span>•</span>
-                  <span>Qty: {selectedQuantity}</span>
-                  <span>•</span>
-                  <span>{product.condition}</span>
-                </div>
-              </div>
-              <p className="text-lg font-black text-primary flex-shrink-0">
-                ${(Number(product.price) * selectedQuantity).toFixed(2)}
-              </p>
-            </div>
-
-            {/* Payment Method Selector */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-base-content uppercase tracking-wider">
-                Select Payment Method
-              </label>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Credit Card Option */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("card")}
-                  className={
-                    "p-3.5 rounded-xl border flex flex-col items-start gap-2 transition-all " +
-                    (paymentMethod === "card"
-                      ? "border-primary bg-primary/10 text-primary font-bold shadow-sm"
-                      : "border-base-content/15 bg-base-100 hover:bg-base-200/50 text-base-content")
-                  }
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <CreditCard className="w-5 h-5" />
-                    {paymentMethod === "card" && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold">Credit / Debit Card</p>
-                    <p className="text-[10px] opacity-70">Pay securely online</p>
-                  </div>
-                </button>
-
-                {/* Pay on Delivery Option */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("cod")}
-                  className={
-                    "p-3.5 rounded-xl border flex flex-col items-start gap-2 transition-all " +
-                    (paymentMethod === "cod"
-                      ? "border-primary bg-primary/10 text-primary font-bold shadow-sm"
-                      : "border-base-content/15 bg-base-100 hover:bg-base-200/50 text-base-content")
-                  }
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <Truck className="w-5 h-5" />
-                    {paymentMethod === "cod" && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold">Pay on Delivery</p>
-                    <p className="text-[10px] opacity-70">Cash at your doorstep</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleConfirmOrder} className="space-y-4">
-              {/* Conditional Payment Fields */}
-              {paymentMethod === "card" ? (
-                /* Credit Card Form */
-                <div className="space-y-3 p-4 bg-base-200/40 rounded-xl border border-base-content/10">
-                  <div className="flex items-center justify-between text-xs text-base-content/70 pb-1">
-                    <span className="font-semibold flex items-center gap-1">
-                      <Lock className="w-3.5 h-3.5 text-success" />
-                      Card Details
-                    </span>
-                    <span className="text-[10px] text-base-content/50">Encrypted 256-bit</span>
-                  </div>
-
-                  {/* Cardholder Name */}
-                  <div className="form-control">
-                    <label className="label py-1">
-                      <span className="label-text text-xs font-medium">Cardholder Name</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="cardHolder"
-                      placeholder="e.g. John Doe"
-                      value={cardDetails.cardHolder}
-                      onChange={handleCardChange}
-                      className="input input-bordered input-sm w-full"
-                      required
-                    />
-                  </div>
-
-                  {/* Card Number */}
-                  <div className="form-control">
-                    <label className="label py-1">
-                      <span className="label-text text-xs font-medium">Card Number</span>
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-                      <input
-                        type="text"
-                        name="cardNumber"
-                        maxLength="19"
-                        placeholder="4532 •••• •••• 8892"
-                        value={cardDetails.cardNumber}
-                        onChange={handleCardChange}
-                        className="input input-bordered input-sm w-full pl-9"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Expiry & CVV Row */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="form-control">
-                      <label className="label py-1">
-                        <span className="label-text text-xs font-medium">Expiry (MM/YY)</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        maxLength="5"
-                        placeholder="12/28"
-                        value={cardDetails.expiryDate}
-                        onChange={handleCardChange}
-                        className="input input-bordered input-sm w-full"
-                        required
-                      />
-                    </div>
-                    <div className="form-control">
-                      <label className="label py-1">
-                        <span className="label-text text-xs font-medium">CVV / CVC</span>
-                      </label>
-                      <input
-                        type="password"
-                        name="cvv"
-                        maxLength="4"
-                        placeholder="•••"
-                        value={cardDetails.cvv}
-                        onChange={handleCardChange}
-                        className="input input-bordered input-sm w-full"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Pay on Delivery Info Box */
-                <div className="p-4 bg-info/10 border border-info/20 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-info font-bold text-xs">
-                    <Truck className="w-4 h-4" />
-                    Cash on Delivery Terms
-                  </div>
-                  <p className="text-xs text-base-content/70 leading-relaxed">
-                    You can inspect the product package upon arrival and hand the exact cash amount (${Number(product.price).toFixed(2)}) to our courier partner.
-                  </p>
-                </div>
-              )}
-
-              {/* Delivery Information */}
-              <div className="space-y-3 pt-1">
-                <label className="text-xs font-bold text-base-content uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  Delivery Information
-                </label>
-
-                <div className="form-control">
-                  <label className="label py-1">
-                    <span className="label-text text-xs font-medium">Shipping Address *</span>
-                  </label>
-                  <textarea
-                    rows="2"
-                    placeholder="House / Flat No., Road, City, Zip Code"
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    className="textarea textarea-bordered textarea-sm w-full"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label py-1">
-                    <span className="label-text text-xs font-medium">Contact Phone Number *</span>
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="+1 234 567 890"
-                    value={recipientPhone}
-                    onChange={(e) => setRecipientPhone(e.target.value)}
-                    className="input input-bordered input-sm w-full"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Price Breakdown */}
-              <div className="pt-2 border-t border-base-content/10 space-y-1 text-xs">
-                <div className="flex justify-between text-base-content/70">
-                  <span>Product Price ({selectedQuantity} {selectedQuantity === 1 ? "unit" : "units"}):</span>
-                  <span>${(Number(product.price) * selectedQuantity).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-base-content/70">
-                  <span>Delivery Fee:</span>
-                  <span className="text-success font-semibold">Free</span>
-                </div>
-                <div className="flex justify-between text-sm font-bold text-base-content pt-1 border-t border-base-content/5">
-                  <span>Total Amount:</span>
-                  <span className="text-primary font-black text-base">
-                    ${(Number(product.price) * selectedQuantity).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCheckoutOpen(false)}
-                  className="btn btn-ghost btn-sm flex-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPlacingOrder}
-                  className="btn btn-primary btn-sm flex-1 gap-1.5"
-                >
-                  {isPlacingOrder ? (
-                    <span className="loading loading-spinner loading-xs" />
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>
-                        {paymentMethod === "card"
-                          ? `Pay & Order (${selectedQuantity})`
-                          : `Confirm Order (${selectedQuantity})`}
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {product && (
+        <CheckoutDialog
+          open={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          lines={[
+            {
+              id: product._id,
+              name: product.name,
+              meta: `${selectedQuantity} × $${Number(product.price).toFixed(2)} · ${
+                product.condition === "New" ? "New" : "Used"
+              }`,
+              amount: Number(product.price) * selectedQuantity,
+            },
+          ]}
+          total={Number(product.price) * selectedQuantity}
+          paymentMethod={paymentMethod}
+          onPaymentMethodChange={setPaymentMethod}
+          shippingAddress={shippingAddress}
+          onShippingAddressChange={(e) => setShippingAddress(e.target.value)}
+          recipientPhone={recipientPhone}
+          onRecipientPhoneChange={(e) => setRecipientPhone(e.target.value)}
+          cardDetails={cardDetails}
+          onCardChange={handleCardChange}
+          onSubmit={handleConfirmOrder}
+          isSubmitting={isPlacingOrder}
+          submitLabel={paymentMethod === "card" ? "Pay and order" : "Place order"}
+        />
       )}
     </div>
   );
