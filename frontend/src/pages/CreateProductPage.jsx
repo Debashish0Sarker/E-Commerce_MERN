@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PlusCircle, ArrowLeft, Package, DollarSign, Tag, FileText, CheckCircle2, Layers } from "lucide-react";
+import { PlusCircle, ArrowLeft, Package, DollarSign, Tag, FileText, CheckCircle2, Layers, Image as ImageIcon, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import axiosInstance from "../lib/axios";
@@ -30,6 +30,7 @@ const CreateProductPage = () => {
     condition: "New",
     ownerCount: 0,
     stock: 1,
+    image: "",
   });
 
   const handleChange = (e) => {
@@ -38,6 +39,22 @@ const CreateProductPage = () => {
       ...prev,
       [name]: name === "ownerCount" || name === "stock" ? Number(value) : value,
     }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be smaller than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -136,6 +153,64 @@ const CreateProductPage = () => {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Product Image */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold">Product Image</span>
+                  <span className="label-text-alt text-base-content/50">Upload file or paste URL</span>
+                </label>
+
+                {formData.image ? (
+                  /* Image Preview */
+                  <div className="relative rounded-2xl overflow-hidden border border-base-content/10 bg-base-200/50 p-2 max-w-sm">
+                    <img
+                      src={formData.image}
+                      alt="Product preview"
+                      className="w-full h-44 object-cover rounded-xl"
+                      onError={() => toast.error("Could not load image from this URL")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, image: "" }))}
+                      className="btn btn-circle btn-xs btn-error absolute top-4 right-4 shadow-md text-white"
+                      title="Remove image"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  /* Image Input / File Upload */
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <ImageIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
+                        <input
+                          type="url"
+                          name="image"
+                          placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                          className="input input-bordered w-full pl-10 text-sm"
+                          value={formData.image}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <label className="btn btn-outline btn-primary gap-1.5 cursor-pointer">
+                        <Upload className="w-4 h-4" />
+                        <span className="hidden sm:inline">Browse</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-base-content/50">
+                      Upload from your device (JPG, PNG, WebP) or paste an online image link.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Price, Stock & Category Row */}

@@ -9,9 +9,12 @@ import {
   User, 
   Sparkles, 
   PlusCircle, 
-  ArrowUpDown 
+  ArrowUpDown,
+  ShoppingBag,
+  Bot
 } from "lucide-react";
 import Navbar from "../components/Navbar";
+import AIChatbot from "../components/AIChatbot";
 import axiosInstance from "../lib/axios";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,6 +38,9 @@ const Homepage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedCondition, setSelectedCondition] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
+  const [maxPrice, setMaxPrice] = useState(null);
+  const [minPrice, setMinPrice] = useState(null);
+  const [minStock, setMinStock] = useState(null);
 
   // Fetch all products
   useEffect(() => {
@@ -53,10 +59,47 @@ const Homepage = () => {
     fetchProducts();
   }, []);
 
+  // Handle AI extracted filters from chatbot
+  const handleApplyAIFilters = (filters) => {
+    if (!filters) return;
+
+    if (filters.category && filters.category !== "All") {
+      setSelectedCategory(filters.category);
+    }
+    if (filters.condition) {
+      setSelectedCondition(filters.condition);
+    }
+    if (filters.searchKeyword) {
+      setSearchQuery(filters.searchKeyword);
+    }
+    if (filters.maxPrice !== undefined && filters.maxPrice !== null) {
+      setMaxPrice(filters.maxPrice);
+    }
+    if (filters.minPrice !== undefined && filters.minPrice !== null) {
+      setMinPrice(filters.minPrice);
+    }
+    if (filters.minStock !== undefined && filters.minStock !== null) {
+      setMinStock(filters.minStock);
+    }
+    if (filters.sortBy) {
+      if (filters.sortBy === "price-low") setSortBy("price-asc");
+      else if (filters.sortBy === "price-high") setSortBy("price-desc");
+      else if (filters.sortBy === "newest") setSortBy("newest");
+      else if (filters.sortBy === "stock") setSortBy("stock");
+    }
+
+    // Smoothly scroll to product results
+    const el = document.getElementById("products-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   // Filter & Sort products
   const filteredProducts = products
     .filter((product) => {
       const matchesSearch =
+        !searchQuery ||
         product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,11 +111,28 @@ const Homepage = () => {
       const matchesCondition =
         selectedCondition === "All" || product.condition === selectedCondition;
 
-      return matchesSearch && matchesCategory && matchesCondition;
+      const matchesMaxPrice =
+        maxPrice === null || product.price <= maxPrice;
+
+      const matchesMinPrice =
+        minPrice === null || product.price >= minPrice;
+
+      const matchesMinStock =
+        minStock === null || (product.stock || 1) >= minStock;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesCondition &&
+        matchesMaxPrice &&
+        matchesMinPrice &&
+        matchesMinStock
+      );
     })
     .sort((a, b) => {
       if (sortBy === "price-asc") return a.price - b.price;
       if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "stock") return (b.stock || 1) - (a.stock || 1);
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // newest first
     });
 
@@ -81,6 +141,9 @@ const Homepage = () => {
     setSelectedCategory("All");
     setSelectedCondition("All");
     setSortBy("newest");
+    setMaxPrice(null);
+    setMinPrice(null);
+    setMinStock(null);
   };
 
   return (
@@ -99,7 +162,7 @@ const Homepage = () => {
             Find whatever you are looking for
           </h1>
           <p className="text-base-content/70 max-w-2xl mx-auto text-sm sm:text-base">
-            Explore verified listings from individual and commercial sellers. Search by item name, category, or keywords.
+            Explore listings from individual and commercial sellers. Search by item name, category, or keywords.
           </p>
 
           {/* Search Bar Input */}
@@ -147,15 +210,46 @@ const Homepage = () => {
       </section>
 
       {/* Main Content Area: Filter Bar + Product Grid */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main id="products-section" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Controls Row: Condition & Sorting */}
         <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-base-content/10">
-          <div className="flex items-center gap-2 text-sm text-base-content/70">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
             <SlidersHorizontal className="w-4 h-4 text-primary" />
             <span>
               Showing <strong className="text-base-content">{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "product" : "products"}
             </span>
-            {(searchQuery || selectedCategory !== "All" || selectedCondition !== "All") && (
+
+            {/* AI Active Filter Badges */}
+            {(maxPrice !== null || minPrice !== null || minStock !== null) && (
+              <div className="flex flex-wrap items-center gap-1.5 ml-2">
+                {maxPrice !== null && (
+                  <span className="badge badge-sm badge-primary gap-1">
+                    Max: ${maxPrice}
+                    <button type="button" onClick={() => setMaxPrice(null)} className="hover:opacity-75">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {minPrice !== null && (
+                  <span className="badge badge-sm badge-primary gap-1">
+                    Min: ${minPrice}
+                    <button type="button" onClick={() => setMinPrice(null)} className="hover:opacity-75">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {minStock !== null && (
+                  <span className="badge badge-sm badge-secondary gap-1">
+                    Stock ≥ {minStock}
+                    <button type="button" onClick={() => setMinStock(null)} className="hover:opacity-75">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {(searchQuery || selectedCategory !== "All" || selectedCondition !== "All" || maxPrice !== null || minPrice !== null || minStock !== null) && (
               <button
                 type="button"
                 onClick={clearFilters}
@@ -192,6 +286,7 @@ const Homepage = () => {
                 <option value="newest">Newest First</option>
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
+                <option value="stock">Most Stock Available</option>
               </select>
             </div>
           </div>
@@ -216,17 +311,32 @@ const Homepage = () => {
               <Link
                 key={product._id}
                 to={`/product/${product._id}`}
-                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-content/5 hover:-translate-y-1 flex flex-col justify-between cursor-pointer"
+                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-content/5 hover:-translate-y-1 flex flex-col justify-between cursor-pointer overflow-hidden group"
               >
-                <div className="card-body p-5 space-y-3">
-                  {/* Top Badges */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="badge badge-ghost badge-sm gap-1 text-xs">
-                      <Tag className="w-3 h-3" />
+                {/* Product Image or Fallback */}
+                <div className="relative h-48 w-full bg-base-200/70 overflow-hidden flex items-center justify-center">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-base-content/30 gap-1.5 p-4 text-center">
+                      <ShoppingBag className="w-10 h-10 stroke-[1.5]" />
+                      <span className="text-[11px] font-medium tracking-wide uppercase">{product.category}</span>
+                    </div>
+                  )}
+
+                  {/* Top Badges Overlay */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
+                    <span className="badge badge-sm badge-neutral/80 backdrop-blur-md gap-1 text-[11px] font-medium text-white">
+                      <Tag className="w-2.5 h-2.5" />
                       {product.category}
                     </span>
                     <span
-                      className={`badge badge-sm font-semibold ${
+                      className={`badge badge-sm font-semibold shadow-sm ${
                         product.condition === "New"
                           ? "badge-success text-success-content"
                           : "badge-warning text-warning-content"
@@ -237,6 +347,9 @@ const Homepage = () => {
                         : `Used (${product.ownerCount || 1} owners)`}
                     </span>
                   </div>
+                </div>
+
+                <div className="card-body p-5 space-y-3">
 
                   {/* Title & Price */}
                   <div>
@@ -311,6 +424,9 @@ const Homepage = () => {
           </div>
         )}
       </main>
+
+      {/* Floating AI Shopping Assistant */}
+      <AIChatbot onApplyFilters={handleApplyAIFilters} />
     </div>
   );
 };

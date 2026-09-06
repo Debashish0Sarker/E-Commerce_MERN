@@ -3,7 +3,7 @@ import User from "../models/User.js";
 
 export const createProduct = async (req, res) => {
     try {
-        const { name, price, category, description, condition, ownerCount, stock } = req.body;
+        const { name, price, category, description, condition, ownerCount, stock, image } = req.body;
 
         // 1. Check if user is in Seller mode
         if (req.user.currentMode !== 'seller' && req.user.role !== 'admin') {
@@ -26,6 +26,7 @@ export const createProduct = async (req, res) => {
             condition,
             ownerCount: condition === 'New' ? 0 : ownerCount,
             stock: parsedStock,
+            image: image || "",
             seller: req.user.id // Taken from the protect middleware
         });
 
