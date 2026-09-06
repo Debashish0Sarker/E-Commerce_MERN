@@ -29,6 +29,7 @@ const getFormattedCart = async (userId) => {
     seller: item.product.seller,
     quantity: item.quantity,
     stock: item.product.stock,
+    image: item.product.image || "",
   }));
 };
 

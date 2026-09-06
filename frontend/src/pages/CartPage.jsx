@@ -189,8 +189,21 @@ const CartPage = () => {
                   className="card bg-base-100 shadow-sm hover:shadow-md transition-shadow border border-base-content/5 p-4 sm:p-5"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    {/* Item Thumbnail */}
+                    <div className="w-20 h-20 rounded-xl bg-base-200/60 overflow-hidden flex-shrink-0 flex items-center justify-center border border-base-content/10">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Package className="w-8 h-8 text-base-content/30" />
+                      )}
+                    </div>
+
                     {/* Item Details */}
-                    <div className="space-y-1.5 flex-1">
+                    <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="badge badge-ghost badge-xs gap-1 text-[11px]">
                           <Tag className="w-2.5 h-2.5" />
