@@ -163,7 +163,7 @@ Visit **`http://localhost:5173`** in your browser!
 ### 1. Register Accounts
 - **Customer Account**: Click **Sign In** $\rightarrow$ **Sign Up**, fill in your details, and leave the role as `Customer`.
 - **Seller Account**: Register with role set to `Seller`. Once registered, a **"Create Product"** button and a mode switch button (`Customer mode` $\leftrightarrow$ `Seller mode`) will appear in your top navbar.
-- **Admin Account**: Register with role `Admin` and enter the `ADMIN_SECRET_CODE` configured in your `.env`.
+- **Admin Account**: Register with role `Admin` and enter the `ADMIN_SECRET_CODE` configured in your `.env`.(It is not added yet)
 
 ### 2. List a Product (Seller)
 1. Switch to **Seller Mode** in the navbar.
